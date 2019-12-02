@@ -28,11 +28,29 @@ const DUMMY_PLACES = [
 router.get('/:placeId', (req, res, next) => {
     let place = DUMMY_PLACES.find(p => p.id === req.params.placeId);
 
+    if (!place) {
+        let error = new Error(
+            'Could not find a place for the provided place id.'
+        );
+
+        error.code = 404;
+        throw error;
+    }
+
     res.json({ place });
 });
 
 router.get('/user/:userId', (req, res, next) => {
     let places = DUMMY_PLACES.filter(p => p.creator === req.params.userId);
+
+    if (places.length === 0) {
+        let error = new Error(
+            'Could not find a place for the provided user id.'
+        );
+
+        error.code = 404;
+        return next(error);
+    }
 
     res.json({ places });
 });
