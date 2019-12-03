@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator');
 
 const HttpError = require('../model/http-error');
 const getCoordsForAddress = require('../util/location');
+const Place = require('../model/place');
 
 let DUMMY_PLACES = [
     {
@@ -73,16 +74,24 @@ const createPlace = async (req, res, next) => {
         return next(err);
     }
 
-    const createdPlace = {
-        id: uuid(),
+    const createdPlace = new Place({
         title,
         description,
-        location: coordinates,
         address,
+        location: coordinates,
+        image:
+            'https://handluggageonly.co.uk/wp-content/uploads/2015/10/How-To-Get-The-Most-Out-Of-Your-Time-In-New-York-City_-9.jpg',
         creator
-    };
+    });
 
-    DUMMY_PLACES.push(createdPlace);
+    try {
+        await createdPlace.save();
+    } catch (err) {
+        return next(
+            new HttpError('Creating place failed. Please correct.', 500)
+        );
+    }
+
     res.status(201).json({ place: createdPlace });
 };
 
