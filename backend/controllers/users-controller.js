@@ -13,28 +13,51 @@ let DUMMY_USERS = [
     }
 ];
 
-const getUsers = (req, res, next) => {
+const getUsers = async (req, res, next) => {
     res.status(200).send({ users: DUMMY_USERS });
 };
 
-const signUp = (req, res, next) => {
+const signUp = async (req, res, next) => {
     const errors = validationResult(req);
 
     if (!errors.isEmpty()) {
-        throw new HttpError('Invalid inputs passed. Please correct.', 422);
+        return next(
+            new HttpError('Invalid inputs passed. Please correct.', 422)
+        );
     }
 
     const { name, email, password } = req.body;
-    const hasUser = DUMMY_USERS.find(p => p.email === email);
+    let existingUser;
 
-    if (hasUser) {
-        throw new HttpError('Email already exists', 422);
+    try {
+        existingUser = await User.findOne({ email: email });
+    } catch (err) {
+        return next(new HttpError('A problem occurred'), 500);
     }
 
-    const createdUser = { id: uuid(), name, email, password };
+    if (existingUser) {
+        return next(
+            new HttpError('User exists already. Please login instead.'),
+            422
+        );
+    }
 
-    DUMMY_USERS.push(createdUser);
-    res.status(200).json({ user: createdUser });
+    const createdUser = new User({
+        name,
+        email,
+        password,
+        image:
+            'https://d2779tscntxxsw.cloudfront.net/5a1d9c9dc027b.png?width=1200&quality=80',
+        places: '5'
+    });
+
+    try {
+        await createdUser.save();
+    } catch (err) {
+        return next(new HttpError('Signing up failed. Please correct.', 500));
+    }
+
+    res.status(201).json({ user: createdUser.toObject({ getters: true }) });
 };
 
 const logIn = (req, res, next) => {
