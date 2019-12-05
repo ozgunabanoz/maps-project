@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { validationResult } = require('express-validator');
 const mongoose = require('mongoose');
 
@@ -84,8 +85,7 @@ const createPlace = async (req, res, next) => {
         description,
         address,
         location: coordinates,
-        image:
-            'https://handluggageonly.co.uk/wp-content/uploads/2015/10/How-To-Get-The-Most-Out-Of-Your-Time-In-New-York-City_-9.jpg',
+        image: req.file.path,
         creator
     });
 
@@ -162,6 +162,8 @@ const deletePlace = async (req, res, next) => {
         return next(new HttpError('Could not find the place for this id'), 404);
     }
 
+    const imagePath = place.image;
+
     try {
         const sess = await mongoose.startSession();
 
@@ -173,6 +175,10 @@ const deletePlace = async (req, res, next) => {
     } catch (err) {
         return next(new HttpError('An error occurred'), 500);
     }
+
+    fs.unlink(imagePath, err => {
+        console.log(err);
+    });
 
     res.status(200).send({
         place: place.toObject({ getters: true }),
