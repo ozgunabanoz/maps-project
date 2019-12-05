@@ -46,8 +46,7 @@ const signUp = async (req, res, next) => {
         name,
         email,
         password,
-        image:
-            'https://d2779tscntxxsw.cloudfront.net/5a1d9c9dc027b.png?width=1200&quality=80',
+        image: req.file.path,
         places: []
     });
 
