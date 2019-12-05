@@ -133,19 +133,34 @@ const updatePlace = async (req, res, next) => {
 
     const { title, description } = req.body;
     const placeId = req.params.placeId;
-    let updatedPlace;
+    let place;
 
     try {
-        updatedPlace = await Place.findOneAndUpdate(
-            { _id: placeId },
-            { $set: { title, description } },
-            { new: true }
-        );
+        place = await Place.findById(placeId);
     } catch (err) {
-        return next(new HttpError('Could not find the place'), 500);
+        return next(
+            new HttpError('Something went wrong, could not update place.', 500)
+        );
     }
 
-    res.status(200).json({ place: updatedPlace.toObject({ getters: true }) });
+    if (place.creator.toString() !== req.userData.userId) {
+        return next(
+            new HttpError('You are not authorized to edit this place.', 401)
+        );
+    }
+
+    place.title = title;
+    place.description = description;
+
+    try {
+        await place.save();
+    } catch (err) {
+        return next(
+            new HttpError('Something went wrong, could not update place.', 500)
+        );
+    }
+
+    res.status(200).json({ place: place.toObject({ getters: true }) });
 };
 
 const deletePlace = async (req, res, next) => {
@@ -160,6 +175,13 @@ const deletePlace = async (req, res, next) => {
 
     if (!place) {
         return next(new HttpError('Could not find the place for this id'), 404);
+    }
+
+    if (place.creator.id !== req.userData.userId) {
+        return next(
+            new HttpError('You are not authorized to delete this place.'),
+            401
+        );
     }
 
     const imagePath = place.image;

@@ -120,7 +120,7 @@ const logIn = async (req, res, next) => {
     if (!isValidPassword) {
         return next(
             'Could not log you in, please check your credentials.',
-            500
+            403
         );
     }
 
