@@ -6,6 +6,7 @@ import Input from '../../shared/components/FormElements/Input';
 import Button from '../../shared/components/FormElements/Button';
 import ErrorModal from '../../shared/components/UIElements/ErrorModal';
 import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
+import ImageUpload from '../../shared/components/FormElements/ImageUpload';
 import {
     VALIDATOR_EMAIL,
     VALIDATOR_MINLENGTH,
@@ -38,13 +39,17 @@ const Auth = () => {
     const switchModeHandler = () => {
         if (!isLogin) {
             setFormData(
-                { ...formState.inputs, name: undefined },
+                { ...formState.inputs, name: undefined, image: undefined },
                 formState.inputs.email.isValid &&
                     formState.inputs.password.isValid
             );
         } else {
             setFormData(
-                { ...formState.inputs, name: { value: '', isValid: false } },
+                {
+                    ...formState.inputs,
+                    name: { value: '', isValid: false },
+                    image: { value: null, isValid: false }
+                },
                 false
             );
         }
@@ -105,6 +110,13 @@ const Auth = () => {
                             errorText="Please enter a name"
                             onInput={inputHandler}
                         ></Input>
+                    )}
+                    {!isLogin && (
+                        <ImageUpload
+                            center
+                            id="image"
+                            onInput={inputHandler}
+                        ></ImageUpload>
                     )}
                     <Input
                         element="input"
