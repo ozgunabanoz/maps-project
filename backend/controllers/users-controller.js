@@ -1,5 +1,6 @@
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const HttpError = require('../model/http-error');
 const User = require('../model/user');
@@ -67,7 +68,23 @@ const signUp = async (req, res, next) => {
         return next(new HttpError('Signing up failed. Please correct.', 500));
     }
 
-    res.status(201).json({ user: createdUser.toObject({ getters: true }) });
+    let token;
+
+    try {
+        token = jwt.sign(
+            { userId: createdUser.id, email: createdUser.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+    } catch (err) {
+        return next(new HttpError('Signing up failed. Please correct.', 500));
+    }
+
+    res.status(201).json({
+        userId: createdUser.id,
+        email: createdUser.email,
+        token: token
+    });
 };
 
 const logIn = async (req, res, next) => {
@@ -80,7 +97,7 @@ const logIn = async (req, res, next) => {
         return next(new HttpError('Login failed try again'), 422);
     }
 
-    if (!user || user.password !== password) {
+    if (!user) {
         return next(
             new HttpError(
                 'Could not identify user. Credentials seem to be wrong.',
@@ -89,7 +106,37 @@ const logIn = async (req, res, next) => {
         );
     }
 
-    res.status(200).json({ user: user.toObject({ getters: true }) });
+    let isValidPassword = false;
+
+    try {
+        isValidPassword = await bcrypt.compare(password, user.password);
+    } catch (err) {
+        return next(
+            'Could not log you in, please check your credentials.',
+            500
+        );
+    }
+
+    if (!isValidPassword) {
+        return next(
+            'Could not log you in, please check your credentials.',
+            500
+        );
+    }
+
+    let token;
+
+    try {
+        token = jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+    } catch (err) {
+        return next(new HttpError('Logging in failed. Please correct.', 500));
+    }
+
+    res.status(200).json({ userId: user.id, email: user.email, token: token });
 };
 
 exports.getUsers = getUsers;
