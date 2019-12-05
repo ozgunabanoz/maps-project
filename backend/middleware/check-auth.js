@@ -3,6 +3,10 @@ const jwt = require('jsonwebtoken');
 const HttpError = require('../model/http-error');
 
 module.exports = (req, res, next) => {
+    if (req.method === 'OPTIONS') {
+        return next();
+    }
+
     let token;
 
     try {
