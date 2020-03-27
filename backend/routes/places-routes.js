@@ -14,29 +14,29 @@ router.get('/user/:userId', placesControllers.getPlacesByUserId);
 router.use(checkAuth);
 
 router.post(
-    '/',
-    fileUpload.single('image'),
-    [
-        check('title')
-            .not()
-            .isEmpty(),
-        check('description').isLength({ min: 5 }),
-        check('address')
-            .not()
-            .isEmpty()
-    ],
-    placesControllers.createPlace
+  '/',
+  fileUpload.single('image'),
+  [
+    check('title')
+      .not()
+      .isEmpty(),
+    check('description').isLength({ min: 5 }),
+    check('address')
+      .not()
+      .isEmpty()
+  ],
+  placesControllers.createPlace
 );
 
 router.patch(
-    '/:placeId',
-    [
-        check('title')
-            .not()
-            .isEmpty(),
-        check('description').isLength({ min: 5 })
-    ],
-    placesControllers.updatePlace
+  '/:placeId',
+  [
+    check('title')
+      .not()
+      .isEmpty(),
+    check('description').isLength({ min: 5 })
+  ],
+  placesControllers.updatePlace
 );
 
 router.delete('/:placeId', placesControllers.deletePlace);
